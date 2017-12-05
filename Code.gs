@@ -21,25 +21,33 @@ function reconcileCalendar(e) {
   // Which calendar are we updating?
   var app = {
     onCallCalendarId: ''
+    , maxEvents: 200 // The maximum number of calendar events to create
   }
 
   // Get all of the non-empty date/person pairs
-  app.sheetData = e.range.getSheet().getRange(2, 2, e.range.getSheet().getLastRow(), 2).getValues()
+  app.sheetData = e.range.getSheet().getRange(2, 2, e.range.getSheet().getLastRow(), 6).getValues()
 
   var onCallData = []  
   for (r=0; r < app.sheetData.length; r++) {
     onCallData.push({
       date: app.sheetData[r][0],
-      person: app.sheetData[r][1]
+      person: app.sheetData[r][1],
+      desk: app.sheetData[r][2] + app.sheetData[r][3],
+      mobile: app.sheetData[r][4],
+      backup: app.sheetData[r][5],
     })
   }
   
+  Logger.log("onCallData is %s", onCallData)
+  
   // Clear out all existing events in the on-call calendar
-  var eventsData = []
   var events = CalendarApp.getCalendarById(app.onCallCalendarId).getEvents(new Date('1900-01-01'), new Date('3000-12-31'))
+  for (i=0; i < events.length; i++) {
+    events[i].deleteEvent()
+  }
   
   // Create new events using onCallData
-  for (i=0; i < onCallData.length; i++) {
+  for (i=0; i < onCallData.length && i < app.maxEvents; i++) {
     // If the data is valid, create the event
     if (validateOnCallData(onCallData[i])) {
       Logger.log("onCallData[i] is %s", onCallData[i])
@@ -48,11 +56,20 @@ function reconcileCalendar(e) {
       d.setDate(formattedDateForCalendar(onCallData[i].date).getDate() + 6)
       var endDate = d
       Logger.log("endDate is %s", endDate)
-        var event = CalendarApp.getCalendarById(app.onCallCalendarId).createEvent(
-          onCallData[i].person, 
-          formattedDateForCalendar(onCallData[i].date), 
-          endDate).getId()
-        Logger.log(event)
+      
+      // This is the format of the calendar event title
+      var eventTitle = "On call: " + onCallData[i].person + "/" + onCallData[i].backup
+      
+      var eventOptions = {
+        description: onCallData[i].person + "\ndesk: " + onCallData[i].desk + "\nmobile: " + onCallData[i].mobile
+      }
+        
+      var event = CalendarApp.getCalendarById(app.onCallCalendarId).createEvent(
+          eventTitle 
+          , formattedDateForCalendar(onCallData[i].date)
+          , endDate
+          , eventOptions).getId()
+      Logger.log(event)
     } else {
       Logger.log('Looks like the date is invalid: ' + validateOnCallData(onCallData[i]))
     }
