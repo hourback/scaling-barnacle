@@ -25,16 +25,17 @@ function reconcileCalendar(e) {
   }
 
   // Get all of the non-empty date/person pairs
-  app.sheetData = e.range.getSheet().getRange(2, 2, e.range.getSheet().getLastRow(), 6).getValues()
+  app.sheetData = e.range.getSheet().getRange(2, 2, e.range.getSheet().getLastRow(), 7).getValues()
 
   var onCallData = []  
   for (r=0; r < app.sheetData.length; r++) {
     onCallData.push({
-      date: app.sheetData[r][0],
+      date:   app.sheetData[r][0],
       person: app.sheetData[r][1],
-      desk: app.sheetData[r][2] + app.sheetData[r][3],
+      desk:   app.sheetData[r][2] + app.sheetData[r][3],
       mobile: app.sheetData[r][4],
       backup: app.sheetData[r][5],
+      notes:  app.sheetData[r][6],
     })
   }
   
@@ -61,7 +62,7 @@ function reconcileCalendar(e) {
       var eventTitle = "On call: " + onCallData[i].person + "/" + onCallData[i].backup
       
       var eventOptions = {
-        description: onCallData[i].person + "\ndesk: " + onCallData[i].desk + "\nmobile: " + onCallData[i].mobile
+        description: onCallData[i].person + "\ndesk: " + onCallData[i].desk + "\nmobile: " + onCallData[i].mobile + "\n\n" + onCallData[i].notes
       }
         
       var event = CalendarApp.getCalendarById(app.onCallCalendarId).createEvent(
